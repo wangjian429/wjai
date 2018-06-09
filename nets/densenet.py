@@ -57,9 +57,9 @@ def densenet(images, num_classes=1001, is_training=False,
       end_points: a dictionary from components of the network to the corresponding
         activation.
 	"""
-	growth = 24
+	growth = 6
 	compression_rate = 0.5
-	layer_num = 40
+	layer_num = 10
 	def reduce_dim(input_feature):
 		return int(int(input_feature.shape[-1]) * compression_rate)
 
@@ -69,10 +69,10 @@ def densenet(images, num_classes=1001, is_training=False,
 		with slim.arg_scope(bn_drp_scope(is_training=is_training,keep_prob=dropout_keep_prob)) as ssc:
 			with slim.arg_scope([slim.batch_norm, slim.dropout],
                         is_training=is_training):
-				# 在进入block前进行2k 3×3的卷积
+				# 在进入block前进行2k 7×7的卷积
 				end_point = 'conv0'
-				net = slim.conv2d(images, growth*2,  [3, 3], padding='SAME',scope='_conv0')
-				#net = slim.conv2d(net, growth*2, padding='SAME', [7, 7], stride=2 ,scope='_conv0')
+				#net = slim.conv2d(images, growth*2,  [3, 3], padding='SAME',scope='_conv0')
+				net = slim.conv2d(images, growth*2,  [7, 7], padding='SAME',stride=2 ,scope='_conv0')
 				end_points[end_point] = net
 				# dense block 1
 				end_point = 'block1'
@@ -90,13 +90,13 @@ def densenet(images, num_classes=1001, is_training=False,
 				end_point = 'block3'
 				with tf.variable_scope('block3'):
 					net=block(net,layer_num,growth,is_training)
-					net=transition(net,reduce_dim(net),is_training)
+					#net=transition(net,reduce_dim(net),is_training)
 				end_points[end_point] = net
 				# dense block 4
-				end_point = 'block4'
-				with tf.variable_scope('block4'):
-					net=block(net,layer_num,growth,is_training)
-				end_points[end_point] = net
+				#end_point = 'block4'
+				#with tf.variable_scope('block4'):
+				#	net=block(net,layer_num,growth,is_training)
+				#end_points[end_point] = net
 				#net=slim.batch_norm(net,is_training, scope=scope + '_bn1')
 				#net = tf.nn.relu(net)
 				# global avgpool
@@ -105,7 +105,7 @@ def densenet(images, num_classes=1001, is_training=False,
 				end_points[end_point] = net
 		with slim.arg_scope(densenet_arg_scope(weight_decay=0.004)) as slg:
 			logits = slim.conv2d(net, num_classes,  [1, 1], normalizer_fn=None,padding='SAME',scope='logits')
-			logits = tf.squeeze(logits, [1, 2], name='SpatialSqueeze')
+		logits = tf.squeeze(logits, [1, 2], name='SpatialSqueeze')
 	end_points['Logits'] = logits
 	end_points['Predictions'] = slim.softmax(logits, scope='Predictions')
 	return logits, end_points
