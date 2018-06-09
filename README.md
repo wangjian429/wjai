@@ -1,0 +1,2 @@
+# wjai
+ai_study
