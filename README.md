@@ -1,2 +1,2 @@
-# wjai
-ai_study
+# AI Project
+## for Tinymind
