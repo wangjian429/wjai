@@ -39,7 +39,7 @@ if __name__ == '__main__':
     print('change wording dir to [{0}]'.format(w_d))
     os.chdir(w_d)
 
-    step_per_epoch = 500 // FLAGS.batch_size
+    step_per_epoch = 5000 // FLAGS.batch_size
 
     if FLAGS.checkpoint_path:
         ckpt = ' --checkpoint_path=' + FLAGS.checkpoint_path
@@ -60,7 +60,7 @@ if __name__ == '__main__':
         # eval
         print('################    eval    ################')
         p = os.popen(eval_cmd.format(**{'dataset_name': FLAGS.dataset_name, 'dataset_dir': FLAGS.dataset_dir,
-                                        'dataset_split_name': 'validation', 'model_name': FLAGS. model_name,
+                                        'dataset_split_name': FLAGS.dataset_split_name, 'model_name': FLAGS. model_name,
                                         'checkpoint_path': FLAGS.train_dir, 'batch_size': FLAGS.batch_size,
                                         'eval_dir': FLAGS. eval_dir, 'max_num_batches': FLAGS. max_num_batches}))
         for l in p:
