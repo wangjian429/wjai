@@ -45,8 +45,7 @@ if __name__ == '__main__':
         ckpt = ' --checkpoint_path=' + FLAGS.checkpoint_path
     else:
         ckpt = ''
-    i = 16
-    for i in range(60):
+    for i in range(16, 60):
         steps = int(step_per_epoch * (i + 1))
         # train 1 epoch
         print('################    train    ################')
