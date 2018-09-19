@@ -75,7 +75,7 @@ def densenet(images, num_classes=10, is_training=False,
 				end_point = 'conv0'
 				#net = slim.conv2d(images, growth*2,  [3, 3], padding='SAME',scope='_conv0')
 				net = slim.conv2d(images, growth*2,  [7, 7], padding='SAME',stride=2 ,scope='_conv0')
-                net = slim.max_pool2d(net, [3,3], stride=2, scope='_pooling')
+				net = slim.max_pool2d(net, [3,3], stride=2, scope='_pooling')
 				end_points[end_point] = net
 				# dense block 1
 				end_point = 'block1'
