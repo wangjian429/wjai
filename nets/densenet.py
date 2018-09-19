@@ -1,5 +1,3 @@
-"""Contains a variant of the densenet model definition."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -13,6 +11,7 @@ def trunc_normal(stddev): return tf.truncated_normal_initializer(stddev=stddev)
 
 
 def bn_act_conv_drp(current, num_outputs, kernel_size,is_training, scope='block'):
+	#batch_norm和dropout需要指定是不是训练集，不确定在densenet函数中的参数设定能不能传递到子函数，所以又做了一次传递
 	current = slim.batch_norm(current,is_training, scope=scope + '_bn')
 	current = tf.nn.relu(current)
 	current = slim.conv2d(current, num_outputs,kernel_size, padding='SAME',scope=scope + '_conv')
@@ -20,12 +19,15 @@ def bn_act_conv_drp(current, num_outputs, kernel_size,is_training, scope='block'
 	return current
 
 
-def transition(current, num_outputs,is_training, scope='block'):
+def transition(current, num_outputs,is_training, scope='transition'):
+	
 	with slim.arg_scope([slim.batch_norm, slim.dropout],
 							is_training=is_training):
 		current = slim.batch_norm(current,is_training, scope=scope + '_bn')
+        current = tf.nn.relu(current)
 		current = slim.conv2d(current, num_outputs,  [1,1], padding='SAME',scope=scope + '_conv')
-		current = slim.max_pool2d(current, [2,2], stride=2, scope=scope + '_pooling')
+        current = slim.dropout(current, is_training=is_training, keep_prob=0.8 ,scope=scope + '_dropout')
+		current = slim.avg_pool2d(current, [2,2], stride=2, scope=scope + '_pooling')
 	return current
 	
 def block(net, layers, growth,is_training, scope='block'):
@@ -38,7 +40,7 @@ def block(net, layers, growth,is_training, scope='block'):
     return net
 
 
-def densenet(images, num_classes=1001, is_training=False,
+def densenet(images, num_classes=10, is_training=False,
              dropout_keep_prob=0.8,
              scope='densenet'):
 	"""Creates a variant of the densenet model.
@@ -57,9 +59,9 @@ def densenet(images, num_classes=1001, is_training=False,
       end_points: a dictionary from components of the network to the corresponding
         activation.
 	"""
-	growth = 6
+	growth = 3
 	compression_rate = 0.5
-	layer_num = 10
+	layer_num = 3
 	def reduce_dim(input_feature):
 		return int(int(input_feature.shape[-1]) * compression_rate)
 
@@ -73,35 +75,36 @@ def densenet(images, num_classes=1001, is_training=False,
 				end_point = 'conv0'
 				#net = slim.conv2d(images, growth*2,  [3, 3], padding='SAME',scope='_conv0')
 				net = slim.conv2d(images, growth*2,  [7, 7], padding='SAME',stride=2 ,scope='_conv0')
+                net = slim.max_pool2d(net, [3,3], stride=2, scope='_pooling')
 				end_points[end_point] = net
 				# dense block 1
 				end_point = 'block1'
 				with tf.variable_scope('block1'):
-					net=block(net,layer_num,growth,is_training)
+					net=block(net,6,growth,is_training)
 					net=transition(net,reduce_dim(net),is_training)
 				end_points[end_point] = net
 				# dense block 2
 				end_point = 'block2'
 				with tf.variable_scope('block2'):
-					net=block(net,layer_num,growth,is_training)
+					net=block(net,12,growth,is_training)
 					net=transition(net,reduce_dim(net),is_training)
 				end_points[end_point] = net
 				# dense block 3
 				end_point = 'block3'
 				with tf.variable_scope('block3'):
-					net=block(net,layer_num,growth,is_training)
-					#net=transition(net,reduce_dim(net),is_training)
+					net=block(net,24,growth,is_training)
+					net=transition(net,reduce_dim(net),is_training)
 				end_points[end_point] = net
 				# dense block 4
-				#end_point = 'block4'
-				#with tf.variable_scope('block4'):
-				#	net=block(net,layer_num,growth,is_training)
-				#end_points[end_point] = net
-				#net=slim.batch_norm(net,is_training, scope=scope + '_bn1')
-				#net = tf.nn.relu(net)
+				end_point = 'block4'
+				with tf.variable_scope('block4'):
+					net=block(net,16,growth,is_training)
+				end_points[end_point] = net
+				net=slim.batch_norm(net,is_training, scope=scope + '_bn1')
+				net = tf.nn.relu(net)
 				# global avgpool
 				end_point = 'global_pool'
-				net=tf.reduce_mean(net,[1,2],keep_dims=True,)
+				net=tf.reduce_mean(net,[7,7],keep_dims=True,)
 				end_points[end_point] = net
 		with slim.arg_scope(densenet_arg_scope(weight_decay=0.004)) as slg:
 			logits = slim.conv2d(net, num_classes,  [1, 1], normalizer_fn=None,padding='SAME',scope='logits')
