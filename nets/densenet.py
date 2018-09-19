@@ -104,7 +104,7 @@ def densenet(images, num_classes=10, is_training=False,
 				net = tf.nn.relu(net)
 				# global avgpool
 				end_point = 'global_pool'
-				net=tf.reduce_mean(net,[7,7],keep_dims=True,)
+				net=slim.avg_pool2d(net, net.shape[1:3], scope=scope + 'global_pool')
 				end_points[end_point] = net
 		with slim.arg_scope(densenet_arg_scope(weight_decay=0.004)) as slg:
 			logits = slim.conv2d(net, num_classes,  [1, 1], normalizer_fn=None,padding='SAME',scope='logits')
