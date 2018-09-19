@@ -24,9 +24,9 @@ def transition(current, num_outputs,is_training, scope='transition'):
 	with slim.arg_scope([slim.batch_norm, slim.dropout],
 							is_training=is_training):
 		current = slim.batch_norm(current,is_training, scope=scope + '_bn')
-        current = tf.nn.relu(current)
+		current = tf.nn.relu(current)
 		current = slim.conv2d(current, num_outputs,  [1,1], padding='SAME',scope=scope + '_conv')
-        current = slim.dropout(current, is_training=is_training, keep_prob=0.8 ,scope=scope + '_dropout')
+		current = slim.dropout(current, is_training=is_training, keep_prob=0.8 ,scope=scope + '_dropout')
 		current = slim.avg_pool2d(current, [2,2], stride=2, scope=scope + '_pooling')
 	return current
 	
