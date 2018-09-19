@@ -39,13 +39,13 @@ if __name__ == '__main__':
     print('change wording dir to [{0}]'.format(w_d))
     os.chdir(w_d)
 
-    step_per_epoch = 41855 // FLAGS.batch_size
+    step_per_epoch = 50000 // FLAGS.batch_size
 
     if FLAGS.checkpoint_path:
         ckpt = ' --checkpoint_path=' + FLAGS.checkpoint_path
     else:
         ckpt = ''
-    for i in range(60, 80):
+    for i in range(30):
         steps = int(step_per_epoch * (i + 1))
         # train 1 epoch
         print('################    train    ################')
